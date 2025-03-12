@@ -2,7 +2,6 @@ import sqlite3 as sql
 import psycopg2
 from PyQt5.QtWidgets import QMessageBox
 
-
 class DatabaseManager():
     _instance = None
 
