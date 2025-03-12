@@ -8,8 +8,8 @@ import time
 import shutil
 
 # User Packages
-from backend.fotograf_cekme_algoritmasi import *
-from backend.SensorReading import VL53
+from backend.fotografCekmeAlgoritmasi import *
+from backend.sensorManager import VL53
 
 class TakePhoto(QObject):
 

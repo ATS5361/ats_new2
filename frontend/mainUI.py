@@ -19,8 +19,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Necessary User Packages
 import backend.detectThread as DT
 import backend.mainThread as MT
-from frontend.ToolUI import ToolWindow
-from frontend.UserUI import UserWindow
+from frontend.toolUI import ToolWindow
+from frontend.userUI import UserWindow
 from backend.databaseManager import DatabaseManager
 
 photo = MT.TakePhoto()

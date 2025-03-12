@@ -7,7 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import sys
 from backend.databaseManager import DatabaseManager
-from frontend.MainUI import CustomDialog
+from frontend.mainUI import CustomDialog
 
 
 if __name__ == "__main__":

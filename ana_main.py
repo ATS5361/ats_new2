@@ -16,8 +16,8 @@ import json
 import threading
 from datetime import date, datetime
 
-from frontend.ToolUI import ToolWindow
-from frontend.UserUI import UserWindow
+from frontend.toolUI import ToolWindow
+from frontend.userUI import UserWindow
 from backend.detectThread import *
 from backend.mainThread import *
 
