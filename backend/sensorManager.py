@@ -2,7 +2,7 @@ import serial
 import time
 
 class VL53:
-    _instance = None  # Tek örneği saklayacak değişken
+    _instance = None  # Singleton yapısı için: tek örneği saklayacak değişken
 
     def __init__(self):
         self.baudrate = 115200      #default baudrate

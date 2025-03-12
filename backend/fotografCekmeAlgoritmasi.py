@@ -7,7 +7,7 @@ import time
 import cv2
 import numpy as np
 
-checkerboard_image_path = "C:\\Users\\stand-alone1\\Desktop\\ats_new\\images\\1.jpg"
+checkerboard_image_path = "images/1.jpg"
 
 def load_coefficients(file_path):
     """ Loads camera matrix and distortion coefficients. """

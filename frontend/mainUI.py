@@ -17,7 +17,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Necessary User Packages
-import backend.detectThread as DT
+#import backend.detectThread as DT
 import backend.mainThread as MT
 from frontend.toolUI import ToolWindow
 from frontend.userUI import UserWindow
@@ -30,7 +30,7 @@ class MainThread(QThread):
         while(not photo.terminate):
             photo.endlessLoop()
 
-tool_list_path = "sources/toolList.txt"
+tool_list_path = "C:\\Users\\tai\Desktop\\ats_new2\\sources\\toolList.txt"
         
 class CustomDialog(QDialog, DatabaseManager):
     def __init__(self, database, parent = None):
@@ -117,12 +117,18 @@ class CustomDialog(QDialog, DatabaseManager):
 #        DT.runMain()
 
     def keyPressEvent(self, event):
-        """ Press Space key to pass to an instance of ToolUI. """
+        """
+            Enables users to pass between the Login UI And Tool Window.
+            event.key() == Qt.Key_Escape: Click esc to shut down the system.
+            event.key() == Qt.Key_Space: CLick space key to pass to the ToolWindow widget instance.
+        """
+        print(f"Key pressed: {event.key()}")
         if event.key() == Qt.Key_Escape:
-            print("Kapatılıyor...")
+            print("ESC tıklandı. Uygulama kapanıyor...")
             QApplication.instance().quit()
 
         elif event.key() == Qt.Key_Space:
+            print("Space tuşuna basıldı!")
             self.hide()
             self.toolWindow.show()
             self.toolWindow.setFocus()  # ToolWindow'a odaklanır
@@ -214,7 +220,6 @@ class CustomDialog(QDialog, DatabaseManager):
             finally:
                 self.passwordEntry.clear()
 
-    """
         def openToolWindow(self):
             photo.mainThreadFunction()
             photo.terminate = False
@@ -229,6 +234,7 @@ class CustomDialog(QDialog, DatabaseManager):
             self.toolWindow.autoCloseTimer.start()
             #os.system("python3 _main.py &")
 
+    """
         def debugCam(self):
             if self.toolWindow.isVisible():
                 if self.toolWindow.drawerIsOpen and self.debugLastDistance == photo.sensor.avgDistance and photo.sensor.avgDistance > 160:
@@ -403,6 +409,11 @@ class CustomDialog(QDialog, DatabaseManager):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = CustomDialog()
-    win.show()
+    db_manager = DatabaseManager()
+    window = CustomDialog(database=db_manager)
+    window.show()
+    def cleanup():
+        db_manager.close_connections()
+        print("Database connection is closed")
+    app.aboutToQuit.connect(cleanup)
     sys.exit(app.exec_())

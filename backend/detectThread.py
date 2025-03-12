@@ -9,7 +9,6 @@ from cv2 import imshow, waitKey, imwrite, VideoWriter, VideoWriter_fourcc, CAP_P
 from torch import load, zeros, from_numpy, no_grad, tensor
 import torch.backends.cudnn as cudnn
 import numpy as np
-
 from models.experimental import attempt_load
 from detection.utils.datasets import LoadStreams, LoadImages
 from detection.utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \

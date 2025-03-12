@@ -8,7 +8,7 @@ import time
 import shutil
 
 # User Packages
-from backend.fotografCekmeAlgoritmasi import *
+#from backend.fotografCekmeAlgoritmasi import *
 from backend.sensorManager import VL53
 
 class TakePhoto(QObject):
@@ -107,8 +107,219 @@ class TakePhoto(QObject):
 		self.new_frame_time = 0
 
 	def endless_loop(self): # ArUco Reading instead of sensor bytes reading
-		pass
+		try:
+			self.sensor.readBytes()  # VL53 mesafe sensörü dependency
+			self.drawerChanged = self.sensor.isDrawerChanged()
+			self.drawerOpened = self.sensor.isDrawerOpened()
+			# if self.drawerOpened != self.lastDrawerStatus:
+			# 	self.counter_cekmece4 += 1
+			self.lastDrawerStatus = self.drawerOpened
+			currentDistance = self.sensor.getFilteredDistance()
+			self.sensor.distance = currentDistance
+			if self.camera_set == True or self.drawerChanged == 1:
+				self.sensor.drawerChanged = 0
 
+				self.currentFrames = [0] * self.FRAME_COUNT
+				self.frameAvailability = [0] * self.FRAME_COUNT
+				self.drawerNum = self.sensor.getCurrentDrawer()
+
+				if self.txtWriteArr[self.drawerNum - 1] == 0 and self.drawerNum > 0 and self.drawerNum != 99:
+					self.txtWriteArr[self.drawerNum - 1] = 1
+					self.openedDrawerList.append(self.drawerNum)
+					self.openedDrawersTrigger.emit(self.openedDrawerList)
+
+				# print(str(self.drawerNum))
+
+				if self.drawerNum == 1:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter()
+				elif self.drawerNum == 2:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter120()
+				elif self.drawerNum == 3:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter120()
+				elif self.drawerNum == 4:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter120()
+				elif self.drawerNum == 5:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter120()
+				elif self.drawerNum == 6:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter150()
+				else:
+					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter()
+
+			self.camera_set = False
+			print("Distance: " + str(currentDistance))
+			if self.closed_flag == 0 and self.drawerOpened == 0:
+				self.drawerTrigger.emit(0)
+				for i in range(self.FRAME_COUNT):
+					if self.frameAvailability[i] != 0:
+						self.currentFrames[i] = self.currentFrames[i].download()
+						cv2.imwrite("photos/cekmece" + str(self.drawerNum) + "/camera1/1/al_camera0367_foto_" + str(
+							i) + "_1.jpg", self.currentFrames[i])
+					if self.frameAvailability_2[i] != 0:
+						self.currentFrames_2[i] = self.currentFrames_2[i].download()
+						cv2.imwrite("photos/cekmece" + str(self.drawerNum) + "/camera2/1/al_camera0367_foto_" + str(
+							i) + "_2.jpg", self.currentFrames_2[i])
+
+				self.currentFrames = [0] * self.FRAME_COUNT
+				self.currentFrames_2 = [0] * self.FRAME_COUNT
+				self.frameAvailability = [0] * self.FRAME_COUNT
+				self.frameAvailability_2 = [0] * self.FRAME_COUNT
+
+				self.closed_flag = 1
+
+			if self.drawerOpened == 1:
+				_2, self.current_frame_2 = self.video_capture_2.read()
+				_, self.current_frame = self.video_capture.read()
+				self.drawerTrigger.emit(self.drawerNum)
+				value_changed = 0
+				if self.camera_set_1 == False or self.drawerChanged == 1:
+					# self.drawerTrigger.emit(self.drawerNum)
+					drawer_variable = 1
+					counterFirstDrawer = 1
+					try:
+
+						os.mkdir("photos/cekmece" + str(self.drawerNum) + "/camera1/1")
+						os.mkdir("photos/cekmece" + str(self.drawerNum) + "/camera2/1")
+					except:
+						pass
+
+					self.camera_set_1 = True
+
+				if self.sensor.incomingData == 1:
+
+					if self.drawerNum == 1:
+						if currentDistance > 216 and currentDistance < 227:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[0] = self.current_frame
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability[0] = 1
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 340 and currentDistance < 352:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[1] = self.current_frame
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability[1] = 1
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 435 and currentDistance < 450:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[2] = self.current_frame
+							self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability[2] = 1
+							self.frameAvailability_2[2] = 1
+
+					elif self.drawerNum == 2:
+						if currentDistance > 213 and currentDistance < 226:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[0] = self.current_frame
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability[0] = 1
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 309 and currentDistance < 320:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[1] = self.current_frame
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability[1] = 1
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 374 and currentDistance < 386:
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							# self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[2] = self.current_frame
+							# self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability[2] = 1
+						# self.frameAvailability_2[2] = 1
+
+						elif currentDistance > 435 and currentDistance < 448:
+
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames[3] = self.current_frame
+							self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability[3] = 1
+							self.frameAvailability_2[2] = 1
+
+					elif self.drawerNum == 3:
+						if currentDistance > 216 and currentDistance < 233:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.currentFrames[0] = self.current_frame
+							self.frameAvailability[0] = 1
+
+						elif currentDistance > 350 and currentDistance < 367:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 462 and currentDistance < 475:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability_2[2] = 1
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.currentFrames[1] = self.current_frame
+							self.frameAvailability[1] = 1
+
+					elif self.drawerNum == 4:
+						if currentDistance > 307 and currentDistance < 323:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 380 and currentDistance < 392:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 462 and currentDistance < 475:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[2] = self.current_frame_2
+
+							self.frameAvailability_2[2] = 1
+
+					elif self.drawerNum == 5:
+						if currentDistance > 194 and currentDistance < 210:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 400 and currentDistance < 415:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+					elif self.drawerNum == 6:
+						if currentDistance > 210 and currentDistance < 220:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 318 and currentDistance < 328:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 410 and currentDistance < 420:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability_2[2] = 1
+
+						elif currentDistance > 465 and currentDistance < 475:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[3] = self.current_frame_2
+							self.frameAvailability_2[3] = 1
+
+					self.sensor.incomingData = 0
+					self.closed_flag = 0
+		except Exception as e:
+			print("Patladık: ", e)
 	def endlessLoop(self):
 	#time.sleep(0.0001)
 		try:
