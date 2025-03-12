@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import *
 import time
 import os
 import sqlite3
-import psycopg2
+#import psycopg2
 import json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,7 +21,7 @@ import backend.detectThread as DT
 import backend.mainThread as MT
 from frontend.ToolUI import ToolWindow
 from frontend.UserUI import UserWindow
-import backend.databaseManager as db
+from backend.databaseManager import DatabaseManager
 
 photo = MT.TakePhoto()
 class MainThread(QThread):
@@ -32,13 +32,13 @@ class MainThread(QThread):
 
 tool_list_path = "sources/toolList.txt"
         
-class CustomDialog(QDialog, db):
-    def __init__(self, parent = None, db: DatabaseManager):
+class CustomDialog(QDialog, DatabaseManager):
+    def __init__(self, database, parent = None):
         super(CustomDialog, self).__init__(parent)
+        self.database = database
+
         self.setWindowTitle("Toolbox Login Panel")
-
         self.setWindowFlag(Qt.FramelessWindowHint)
-
         self.toolWindow = ToolWindow()
         self.userWindow = UserWindow()	
         self.buttonSize = QSize(160, 160)
@@ -49,6 +49,7 @@ class CustomDialog(QDialog, db):
     
         photo.drawerTrigger.connect(self.toolWindow.updateOpenedDrawer)
         photo.openedDrawersTrigger.connect(self.toolWindow.updateDrawers)
+
         self.toolWindow.detectSignal.connect(self.setOpenedDrawers)
         self.statusLabel = QLabel(self)
         self.toolStatus = False
@@ -63,11 +64,11 @@ class CustomDialog(QDialog, db):
         self.setLastStatus()
         self.setStatusLabel()
         self.addLogo()
-        self.databaseButton.clicked.connect(db.dataMigrate(self))
-#        self.loginButton.clicked.connect(self.readCardForLogin)
-#        self.rebootButton.clicked.connect(self.rebootSystem)
         self.shutDownButton.clicked.connect(self.shutDownSystem)
         self.userButton.clicked.connect(self.addUser)
+#        self.databaseButton.clicked.connect(db.dataMigrate(self))
+#        self.loginButton.clicked.connect(self.readCardForLogin)
+#        self.rebootButton.clicked.connect(self.rebootSystem)
 #        self.toolWindow.disconnectSignal.connect(self.disconnectSensor)
 #        self.toolWindow.updateStatusSignal.connect(self.updateStatus)
         self.toolWindowFlag = 1
@@ -114,25 +115,6 @@ class CustomDialog(QDialog, db):
         self.setLayout(self.layout)
         self.readCard()
 #        DT.runMain()
-    
-    def disconnectSensor(self):
-        photo.sensor.setToolboxOff()
-        self.toolWindow.triggerDetectSignal()
-        photo.terminate = True
-        time.sleep(0.1)
-        del photo.sensor
-        time.sleep(0.1)
-        photo.txtWriteArr = [0]*6
-        photo.openedDrawerList = []
-        self.toolWindow.updateDrawers(photo.openedDrawerList)
-        self.workerThread.quit()
-        self.workerThread.exit()
-        del self.workerThread
-        time.sleep(0.1)
-        photo.video_capture_2.release()
-        photo.video_capture.release()
-        self.setLastStatus()
-        self.setStatusLabel()
 
     def keyPressEvent(self, event):
         """ Press Space key to pass to an instance of ToolUI. """
@@ -160,7 +142,6 @@ class CustomDialog(QDialog, db):
                             total_dif += 1
                             missing_counter += 1
                     self.toolWindow.toolLabels[i].setText(str(missing_counter))
-                    
                     i += 1
 
             self.missingTools = total_dif
@@ -178,30 +159,25 @@ class CustomDialog(QDialog, db):
         password = self.passwordEntry.text()
         if len(password) == 8:
             try:
-                sqlConnectionAdm = sqlite3.connect('database_files/ADD_USER_DATA.db')
-                cursorAdm = sqlConnectionAdm.cursor()
-                cursorAdm.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
-                recordroot = cursorAdm.fetchall()
-                sqlConnectionUsr = sqlite3.connect('database_files/LOGIN_DATA.db')
-                cursorUsr = sqlConnectionUsr.cursor()
-                cursorUsr.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
-                recorduser = cursorUsr.fetchall()
-                sqlConnectionAdm.close()
-                sqlConnectionUsr.close()
-                if len(recordroot) == 1 and self.isForLogin == False:
+                database = DatabaseManager()
+                database.connect_add_user_db(password)
+                database.connect_login_user_db(password)
+                database.close_connections()
+
+                if len(database.add_user_recordroot) == 1 and self.isForLogin == False:
                     self.showButtons()
-                elif len(recorduser) == 1:
+                elif len(database.login_recordroot) == 1:
                     if self.toolWindowFlag:
-                        sqlConnection = sqlite3.connect('database_files/LOGIN_DATA.db')
-                        cursor = sqlConnection.cursor()
+                        sqlConnection = self.database.conn1
+                        cursor = database.add_user_cursor
                     elif self.userWindowFlag:
-                        sqlConnection = sqlite3.connect('database_files/ADD_USER_DATA.db')
-                        cursor = sqlConnection.cursor()
+                        sqlConnection = self.database.conn2
+                        cursor = database.login_cursor
                     else:
                         print("HATA!!! db bağlantısı için gerekli ayarlamalar(flagler) eksik yapılmış.")
                     cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
                     record = cursor.fetchall()
-                    dbcon.end_connection()
+                    database.clos
                     if len(record) == 0:
                         print("HATA!!! Veri Tabanında böyle bir kullanıcı bulunamadı...")
                         self.statusLabel.setText("KULLANICI BULUNAMADI.\nLÜTFEN TEKRAR OKUTUNUZ")
@@ -227,15 +203,79 @@ class CustomDialog(QDialog, db):
                         
                     else:
                         print("Hata: Veri tabanında duplike kayıt bulunmakta!!!")
-                elif(len(recorduser) == 0 and len(recordroot) == 0):
+                elif(len(self.database.login_recordroot) == 0 and len(self.database.add_user_recordroot) == 0):
                     print("HATA!!! Veri Tabanında böyle bir kullanıcı bulunamadı...")
                     self.statusLabel.setText("KULLANICI BULUNAMADI.\nLÜTFEN TEKRAR OKUTUNUZ")
                     self.statusLabel.repaint()
+
             except sqlite3.Error as err:
                 print("Veri tabanı bağlantısı hatası:", err)
-                sqlConnection.close()
+
             finally:
                 self.passwordEntry.clear()
+
+    """
+        def openToolWindow(self):
+            photo.mainThreadFunction()
+            photo.terminate = False
+            self.workerThread = MainThread()
+            self.workerThread.start()
+
+            self.toolWindow.show()
+            time.sleep(2)
+            photo.sensor.setToolboxOn()
+            self.toolWindow.passwordEntry.show()
+            self.toolWindow.passwordEntry.setFocus(True)
+            self.toolWindow.autoCloseTimer.start()
+            #os.system("python3 _main.py &")
+
+        def debugCam(self):
+            if self.toolWindow.isVisible():
+                if self.toolWindow.drawerIsOpen and self.debugLastDistance == photo.sensor.avgDistance and photo.sensor.avgDistance > 160:
+                    self.debugCnt +=1
+                else:
+                    self.debugCnt = 0
+
+                if self.debugCnt >= 5:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("Beklenmedik bir hata ile karşılaşıldı. Tüm çekmecelerin kapalı olduğundan emin olun ve 'OK' butonuna tıklayarak\ntekrar giriş yapın.")
+                    msg.setWindowTitle("HATA")
+                    retunVal = msg.exec_()
+                    if (retunVal == QMessageBox.Ok):
+                        self.toolWindow.closeWindow()
+                    self.debugCnt = 0
+                self.debugLastDistance = photo.sensor.avgDistance
+
+        def disconnectSensor(self):
+            photo.sensor.setToolboxOff()
+            self.toolWindow.triggerDetectSignal()
+            photo.terminate = True
+            time.sleep(0.1)
+            del photo.sensor
+            time.sleep(0.1)
+            photo.txtWriteArr = [0]*6
+            photo.openedDrawerList = []
+            self.toolWindow.updateDrawers(photo.openedDrawerList)
+            self.workerThread.quit()
+            self.workerThread.exit()
+            del self.workerThread
+            time.sleep(0.1)
+            photo.video_capture_2.release()
+            photo.video_capture.release()
+            self.setLastStatus()
+            self.setStatusLabel()
+    """
+    def dataMigrate(self):
+        """Helps transfer data from SQLite to PostgreSQL."""
+        self.database.insertSQLiteToPostgre(completeFlagParam = self.completeFlag)
+        if self.completeFlag:
+            self.database.clearLocalDB(completeFlagParam= self.completeFlag)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Veri tabanı aktarımı tamamlandı.")
+            msg.setWindowTitle("İşlem Tamamlandı")
+            msg.exec_()
 
     def addUser(self):
         self.statusLabel.setText("YETKİLİ KİŞİ GİRİŞİ")
@@ -276,38 +316,6 @@ class CustomDialog(QDialog, db):
 
     def updateStatus(self):
         pass
-
-    def openToolWindow(self):
-        photo.mainThreadFunction()
-        photo.terminate = False
-        self.workerThread = MainThread()
-        self.workerThread.start()
-         
-        self.toolWindow.show()
-        time.sleep(2)
-        photo.sensor.setToolboxOn()
-        self.toolWindow.passwordEntry.show()
-        self.toolWindow.passwordEntry.setFocus(True)
-        self.toolWindow.autoCloseTimer.start()
-        #os.system("python3 _main.py &")
-
-    def debugCam(self):
-        if self.toolWindow.isVisible():
-            if self.toolWindow.drawerIsOpen and self.debugLastDistance == photo.sensor.avgDistance and photo.sensor.avgDistance > 160:
-                self.debugCnt +=1
-            else:
-                self.debugCnt = 0
-            
-            if self.debugCnt >= 5:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setText("Beklenmedik bir hata ile karşılaşıldı. Tüm çekmecelerin kapalı olduğundan emin olun ve 'OK' butonuna tıklayarak\ntekrar giriş yapın.")
-                msg.setWindowTitle("HATA")
-                retunVal = msg.exec_()
-                if (retunVal == QMessageBox.Ok):
-                    self.toolWindow.closeWindow()
-                self.debugCnt = 0
-            self.debugLastDistance = photo.sensor.avgDistance
 
     def rebootSystem(self):
         #self.workerThread.quit()
@@ -380,23 +388,21 @@ class CustomDialog(QDialog, db):
         self.databaseButton.hide()
 
     def setStatusLabel(self):
-
         if (self.toolStatus == False):
-            self.statusLabel.setText(str(self.missingTools) + " EKSİK ALET BULUNMAKTADIR. \n GÖRMEK İÇİN GİRİŞ YAPINIZ.")
+            self.statusLabel.setText("EKSİK ALET BULUNMAKTADIR. (" + str(self.missingTools) + ")" + "\n GÖRMEK İÇİN GİRİŞ YAPINIZ.")
             self.statusLabel.repaint()
             self.statusLabel.setStyleSheet(self.toolNotExistBackground)
         else:
             self.statusLabel.setText("TÜM ALETLER YERİNDEDİR.")
             self.statusLabel.repaint()
             self.statusLabel.setStyleSheet(self.toolExistsBackground)
-        
+
         font = self.statusLabel.font()
-        
         font.setLetterSpacing(QFont.AbsoluteSpacing, 8)
         self.statusLabel.setAlignment(Qt.AlignCenter)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv) # type: ignore
+    app = QApplication(sys.argv)
     win = CustomDialog()
     win.show()
     sys.exit(app.exec_())

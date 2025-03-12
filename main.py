@@ -5,14 +5,17 @@ from PyQt5.QtCore import *
 from PyQt5 import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-
 import sys
-import dbConnection as db
+from backend.databaseManager import DatabaseManager
 from frontend.MainUI import CustomDialog
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = CustomDialog(database) # ?
-    win.show()
+    db_manager = DatabaseManager()
+    window = CustomDialog(database=db_manager)
+    window.show()
+    def cleanup():
+        db_manager.close_connections()
+    app.aboutToQuit.connect(cleanup)
     sys.exit(app.exec_())
