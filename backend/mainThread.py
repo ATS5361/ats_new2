@@ -87,8 +87,8 @@ class TakePhoto(QObject):
 
 	def mainThreadFunction(self):
 		
-		self.video_capture = cv2.VideoCapture(cam1_path, cv2.CAP_GSTREAMER)
-		self.video_capture_2 = cv2.VideoCapture(cam2_path, cv2.CAP_GSTREAMER)
+		self.video_capture = cv2.VideoCapture(self.cam1_path, cv2.CAP_GSTREAMER)
+		self.video_capture_2 = cv2.VideoCapture(self.cam2_path, cv2.CAP_GSTREAMER)
 
 		self.sensor = VL53()
 		
@@ -107,7 +107,6 @@ class TakePhoto(QObject):
 		self.new_frame_time = 0
 
 	def endless_loop(self): # ArUco Reading instead of sensor bytes reading
-
 		pass
 
 	def endlessLoop(self):
@@ -187,50 +186,33 @@ class TakePhoto(QObject):
 					
 					self.camera_set_1 = True
 
-				if  self.sensor.incomingData == 1:
-						
-					if self.drawerNum == 4:
-						if currentDistance > 307 and currentDistance < 323:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[0] = self.current_frame_2
-							self.frameAvailability_2[0] = 1
+				if self.sensor.incomingData == 1:
 
-						elif currentDistance > 380 and currentDistance < 392:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[1] = self.current_frame_2
-							self.frameAvailability_2[1] = 1
-
-						elif currentDistance > 462 and currentDistance < 475:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[2] = self.current_frame_2
-
-							self.frameAvailability_2[2] = 1
-
-					elif self.drawerNum == 1:
+					if self.drawerNum == 1:
 						if currentDistance > 216 and currentDistance < 227:
-							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)  
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames[0] = self.current_frame
 							self.currentFrames_2[0] = self.current_frame_2
 							self.frameAvailability[0] = 1
 							self.frameAvailability_2[0] = 1
-						
+
 						elif currentDistance > 340 and currentDistance < 352:
-							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
 							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames[1] = self.current_frame
 							self.currentFrames_2[1] = self.current_frame_2
 							self.frameAvailability[1] = 1
 							self.frameAvailability_2[1] = 1
-						
+
 						elif currentDistance > 435 and currentDistance < 450:
-							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames[2] = self.current_frame
 							self.currentFrames_2[2] = self.current_frame_2
 							self.frameAvailability[2] = 1
 							self.frameAvailability_2[2] = 1
-						
+
 					elif self.drawerNum == 2:
 						if currentDistance > 213 and currentDistance < 226:
 							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
@@ -265,6 +247,45 @@ class TakePhoto(QObject):
 							self.frameAvailability[3] = 1
 							self.frameAvailability_2[2] = 1
 
+					elif self.drawerNum == 3:
+						if currentDistance > 216 and currentDistance < 233:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.currentFrames[0] = self.current_frame
+							self.frameAvailability[0] = 1
+
+						elif currentDistance > 350 and currentDistance < 367:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 462 and currentDistance < 475:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[2] = self.current_frame_2
+							self.frameAvailability_2[2] = 1
+							self.readVideo_1(self.drawerNum, self.map1, self.map2)
+							self.currentFrames[1] = self.current_frame
+							self.frameAvailability[1] = 1
+
+					elif self.drawerNum == 4:
+						if currentDistance > 307 and currentDistance < 323:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[0] = self.current_frame_2
+							self.frameAvailability_2[0] = 1
+
+						elif currentDistance > 380 and currentDistance < 392:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[1] = self.current_frame_2
+							self.frameAvailability_2[1] = 1
+
+						elif currentDistance > 462 and currentDistance < 475:
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
+							self.currentFrames_2[2] = self.current_frame_2
+
+							self.frameAvailability_2[2] = 1
+
 					elif self.drawerNum == 5:
 						if currentDistance > 194 and currentDistance < 210:
 							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
@@ -276,49 +297,27 @@ class TakePhoto(QObject):
 							self.currentFrames_2[1] = self.current_frame_2
 							self.frameAvailability_2[1] = 1
 
-					elif self.drawerNum == 3:
-						if currentDistance > 216 and currentDistance < 233:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[0] = self.current_frame_2
-							self.frameAvailability_2[0] = 1
-							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
-							self.currentFrames[0] = self.current_frame
-							self.frameAvailability[0] = 1
-
-						elif currentDistance > 350 and currentDistance < 367:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[1] = self.current_frame_2
-							self.frameAvailability_2[1] = 1
-							
-						elif currentDistance > 462 and currentDistance < 475:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
-							self.currentFrames_2[2] = self.current_frame_2
-							self.frameAvailability_2[2] = 1
-							self.readVideo_1(self.drawerNum, self.map1, self.map2) 
-							self.currentFrames[1] = self.current_frame
-							self.frameAvailability[1] = 1
-
 					elif self.drawerNum == 6:
 						if currentDistance > 210 and currentDistance < 220:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames_2[0] = self.current_frame_2
 							self.frameAvailability_2[0] = 1
 
 						elif currentDistance > 318 and currentDistance < 328:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames_2[1] = self.current_frame_2
 							self.frameAvailability_2[1] = 1
 
 						elif currentDistance > 410 and currentDistance < 420:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames_2[2] = self.current_frame_2
 							self.frameAvailability_2[2] = 1
 
 						elif currentDistance > 465 and currentDistance < 475:
-							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014) 
+							self.readVideo_2(self.drawerNum, self.map1_0014, self.map2_0014)
 							self.currentFrames_2[3] = self.current_frame_2
 							self.frameAvailability_2[3] = 1
-			
+
 					self.sensor.incomingData = 0
 					self.closed_flag = 0
 		except Exception as e:

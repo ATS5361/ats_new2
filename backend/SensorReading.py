@@ -43,7 +43,6 @@ class VL53:
         
         self.filterK = 0.25
 
-    
     def setToolboxOn(self):
         self.ser.write(b'1')
     
@@ -88,7 +87,6 @@ class VL53:
                             self.getDistances()        
                             self.updateValues()     
                             self.ser.flush() 
-                           
 
     def getDistances(self):
         self.drawerNum = ord(self.readOneByte()) 
@@ -134,11 +132,6 @@ class VL53:
         if(len(self.sum_derivative) > 5):
             self.sum_change = sum(self.sum_derivative)
             self.sum_change -= self.sum_derivative.pop(0)
-            
-        
+
         self.incomingData = 1
         self.last_avgDistance = self.avgDistance
-        
-     
-
-

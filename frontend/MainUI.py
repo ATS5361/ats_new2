@@ -21,7 +21,7 @@ import backend.detectThread as DT
 import backend.mainThread as MT
 from frontend.ToolUI import ToolWindow
 from frontend.UserUI import UserWindow
-import dbConnection as db
+import backend.databaseManager as db
 
 photo = MT.TakePhoto()
 class MainThread(QThread):
@@ -32,8 +32,8 @@ class MainThread(QThread):
 
 tool_list_path = "sources/toolList.txt"
         
-class CustomDialog(QDialog):
-    def __init__(self, parent = None):
+class CustomDialog(QDialog, db):
+    def __init__(self, parent = None, db: DatabaseManager):
         super(CustomDialog, self).__init__(parent)
         self.setWindowTitle("Toolbox Login Panel")
 
@@ -178,11 +178,11 @@ class CustomDialog(QDialog):
         password = self.passwordEntry.text()
         if len(password) == 8:
             try:
-                sqlConnectionAdm = sqlite3.connect('database_files/add_user_data.db')
+                sqlConnectionAdm = sqlite3.connect('database_files/ADD_USER_DATA.db')
                 cursorAdm = sqlConnectionAdm.cursor()
                 cursorAdm.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
                 recordroot = cursorAdm.fetchall()
-                sqlConnectionUsr = sqlite3.connect('database_files/login_data.db')
+                sqlConnectionUsr = sqlite3.connect('database_files/LOGIN_DATA.db')
                 cursorUsr = sqlConnectionUsr.cursor()
                 cursorUsr.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
                 recorduser = cursorUsr.fetchall()
@@ -192,10 +192,10 @@ class CustomDialog(QDialog):
                     self.showButtons()
                 elif len(recorduser) == 1:
                     if self.toolWindowFlag:
-                        sqlConnection = sqlite3.connect('database_files/login_data.db')
+                        sqlConnection = sqlite3.connect('database_files/LOGIN_DATA.db')
                         cursor = sqlConnection.cursor()
                     elif self.userWindowFlag:
-                        sqlConnection = sqlite3.connect('database_files/add_user_data.db')
+                        sqlConnection = sqlite3.connect('database_files/ADD_USER_DATA.db')
                         cursor = sqlConnection.cursor()
                     else:
                         print("HATA!!! db bağlantısı için gerekli ayarlamalar(flagler) eksik yapılmış.")
