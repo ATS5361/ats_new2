@@ -66,7 +66,7 @@ class CustomDialog(QDialog, DatabaseManager):
         self.addLogo()
         self.shutDownButton.clicked.connect(self.shutDownSystem)
         self.userButton.clicked.connect(self.addUser)
-#        self.databaseButton.clicked.connect(db.dataMigrate(self))
+#        self.databaseButton.clicked.connect(self.database.dataMigrate(self))
 #        self.loginButton.clicked.connect(self.readCardForLogin)
 #        self.rebootButton.clicked.connect(self.rebootSystem)
 #        self.toolWindow.disconnectSignal.connect(self.disconnectSensor)
