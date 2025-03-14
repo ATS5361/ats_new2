@@ -14,30 +14,50 @@ class DatabaseManager():
 
     def connect_to_database(self):
         try:
-            self.conn1 = sql.connect("ADD_USER_DATA.db")
-            self.conn2 = sql.connect("LOGIN_DATA.db")
+            self.conn1 = sql.connect("/home/tai-orin/Desktop/ats_new2/database_files/LOGIN.db")
+            self.conn2 = sql.connect("/home/tai-orin/Desktop/ats_new2/database_files/ADMIN.db")
             print("Database connection is initialized.")
         except Exception as e:
             raise Exception(f"An error occurred while connecting to the database: {e}")
 
+    def execute_query(self, cursor, query):
+        cursor.execute(query)
+        recordroot = cursor.fetchall()
+
+    def create_cursors(self):
+        self.login_cursor = self.conn1.cursor()
+        self.add_user_cursor = self.conn2.cursor()
+        return self.login_cursor, self.add_user_cursor
+
     def connect_add_user_db(self, password):
-        self.conn1 = sql.connect("""C:\\Users\\tai\\Desktop\\ats_new2\\ADD_USER_DATA.db""")
+        self.conn1 = sql.connect('home/tai-orin/Desktop/ats_new2/database_files/ADMIN.db')
+        admin_cursor = self.conn1.cursor()
+        admin_cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM ADMIN WHERE PASSWORD =:password", {"password":password.upper()})
+        self.admin_data = admin_cursor.fetchall()
+
+    def connect_login_user_db(self, password):
+        self.conn2 = sql.connect('home/tai-orin/Desktop/ats_new2/database_files/LOGIN.db')
+        login_cursor = self.conn1.cursor()
+        login_cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password", {"password":password.upper()})
+        self.user_data = login_cursor.fetchall()
+
+    def fetch_admin_data(self):
+        return self.admin_data
+    
+    def fetch_user_data(self):
+        return self.user_data
+
+    def fetch_one_user(self, password):
+        self.conn1 = sql.connect("""/home/tai-orin/Desktop/ats_new2/database_files/ADMIN.db""")
         self.add_user_cursor = self.conn1.cursor()
         self.add_user_cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password",
                           {"password": password.upper()})
         self.add_user_recordroot = self.add_user_cursor.fetchall()
-
-    def connect_login_user_db(self, password):
-        self.conn2 = sql.connect("""C:\\Users\\tai\\Desktop\\ats_new2\\database_files\\LOGIN.db""")
-        self.login_cursor = self.conn2.cursor()
-        self.login_cursor.execute(
-            "SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password",
-            {"password": password.upper()})
-        self.login_recordroot = self.login_cursor.fetchall()
+        return self.add_user_recordroot
 
     def insertSQLiteToPostgre(self, completeFlagParam):
         try:
-            conn = sql.connect("database_files/TOOL_USAGE.db")
+            conn = sql.connect("/home/tai-orin/Desktop/ats_new2/database_files/TOOL_USAGE.db")
             cursor = conn.cursor()
             cursor.execute("""SELECT * FROM TOOL_USAGE""")
             data= cursor.fetchall()
@@ -62,7 +82,7 @@ class DatabaseManager():
 
     def clearLocalDB(self, completeFlagParam):
         try:
-            conn = sql.connect("database_files/TOOL_USAGE.db")
+            conn = sql.connect("/home/tai-orin/Desktop/ats_new2/database_files/TOOL_USAGE.db")
             cursor = conn.cursor()
             cursor.execute("""DELETE FROM TOOL_USAGE WHERE 1=1""")
             conn.commit()
@@ -74,7 +94,7 @@ class DatabaseManager():
     def close_connections(self):
         if hasattr(self, 'conn1') and self.conn1:
             self.conn1.close()
-            print("Connection to ADD_USER_DATA.db closed.")
+            print("Connection to ADMIN.db closed.")
         if hasattr(self, 'conn2') and self.conn2:
             self.conn2.close()
-            print("Connection to LOGIN_DATA.db closed.")
+            print("Connection to LOGIN.db closed.")

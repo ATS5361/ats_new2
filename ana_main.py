@@ -204,11 +204,6 @@ class CustomDialog(QDialog): # type: ignore
             finally:
                 self.passwordEntry.clear()
 
-        
-        
-            # if password == "3DA8ECB9":
-            #     photo.sensor.setToolboxOn()
-            #     self.openToolWindow()
 
     def addUser(self):
         self.statusLabel.setText("YETKİLİ KİŞİ GİRİŞİ")

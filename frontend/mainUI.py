@@ -30,10 +30,10 @@ class MainThread(QThread):
         while(not photo.terminate):
             photo.endlessLoop()
 
-tool_list_path = "C:\\Users\\tai\Desktop\\ats_new2\\sources\\toolList.txt"
+tool_list_path = "/home/tai-orin/Desktop/ats_new2/sources/toolList.txt"
         
 class CustomDialog(QDialog, DatabaseManager):
-    def __init__(self, database, parent = None):
+    def __init__(self, database: DatabaseManager, parent = None):
         super(CustomDialog, self).__init__(parent)
         self.database = database
 
@@ -67,10 +67,10 @@ class CustomDialog(QDialog, DatabaseManager):
         self.shutDownButton.clicked.connect(self.shutDownSystem)
         self.userButton.clicked.connect(self.addUser)
 #        self.databaseButton.clicked.connect(self.database.dataMigrate(self))
-#        self.loginButton.clicked.connect(self.readCardForLogin)
-#        self.rebootButton.clicked.connect(self.rebootSystem)
+        self.loginButton.clicked.connect(self.readCardForLogin)
+        self.rebootButton.clicked.connect(self.rebootSystem)
 #        self.toolWindow.disconnectSignal.connect(self.disconnectSensor)
-#        self.toolWindow.updateStatusSignal.connect(self.updateStatus)
+        self.toolWindow.updateStatusSignal.connect(self.updateStatus)
         self.toolWindowFlag = 1
         self.userWindowFlag = 0
         self.debugLastDistance = 0
@@ -119,20 +119,10 @@ class CustomDialog(QDialog, DatabaseManager):
     def keyPressEvent(self, event):
         """
             Enables users to pass between the Login UI And Tool Window.
-            event.key() == Qt.Key_Escape: Click esc to shut down the system.
-            event.key() == Qt.Key_Space: CLick space key to pass to the ToolWindow widget instance.
         """
-        print(f"Key pressed: {event.key()}")
         if event.key() == Qt.Key_Escape:
-            print("ESC tıklandı. Uygulama kapanıyor...")
+            print("Shutting down...")
             QApplication.instance().quit()
-
-        elif event.key() == Qt.Key_Space:
-            print("Space tuşuna basıldı!")
-            self.hide()
-            self.toolWindow.show()
-            self.toolWindow.setFocus()  # ToolWindow'a odaklanır
-            event.accept()
 
     def setLastStatus(self):
         with open(tool_list_path, "r") as dosya:
@@ -165,25 +155,26 @@ class CustomDialog(QDialog, DatabaseManager):
         password = self.passwordEntry.text()
         if len(password) == 8:
             try:
-                database = DatabaseManager()
-                database.connect_add_user_db(password)
-                database.connect_login_user_db(password)
-                database.close_connections()
+                self.database.connect_add_user_db()
+                recordroot = self.database.fetch_admin_data()
+                self.database.connect_login_user_db()
+                recorduser = self.database.fetch_user_data()
+                self.close_connections()
 
-                if len(database.add_user_recordroot) == 1 and self.isForLogin == False:
+                if len(recordroot) == 1 and self.isForLogin == False:
                     self.showButtons()
-                elif len(database.login_recordroot) == 1:
+                elif len(recorduser) == 1:
                     if self.toolWindowFlag:
-                        sqlConnection = self.database.conn1
-                        cursor = database.add_user_cursor
-                    elif self.userWindowFlag:
                         sqlConnection = self.database.conn2
-                        cursor = database.login_cursor
+                        cursor = sqlConnection.cursor()
+                    elif self.userWindowFlag:
+                        sqlConnection = self.database.conn1
+                        cursor = sqlConnection.cursor()
                     else:
                         print("HATA!!! db bağlantısı için gerekli ayarlamalar(flagler) eksik yapılmış.")
                     cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
                     record = cursor.fetchall()
-                    database.clos
+                    sqlConnection.close()
                     if len(record) == 0:
                         print("HATA!!! Veri Tabanında böyle bir kullanıcı bulunamadı...")
                         self.statusLabel.setText("KULLANICI BULUNAMADI.\nLÜTFEN TEKRAR OKUTUNUZ")
@@ -232,7 +223,6 @@ class CustomDialog(QDialog, DatabaseManager):
             self.toolWindow.passwordEntry.show()
             self.toolWindow.passwordEntry.setFocus(True)
             self.toolWindow.autoCloseTimer.start()
-            #os.system("python3 _main.py &")
 
     """
         def debugCam(self):
