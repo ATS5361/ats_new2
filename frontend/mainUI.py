@@ -107,7 +107,7 @@ class CustomDialog(QDialog, DatabaseManager):
         self.passwordEntry = QLineEdit(self)
         self.passwordEntry.setFixedWidth(0)
         self.passwordEntry.move(100, 100)
-#        self.passwordEntry.textChanged.connect(self.passCheck)
+        self.passwordEntry.textChanged.connect(self.passCheck)
         self.passwordEntry.hide()
 
         self.isForLogin = False
@@ -155,11 +155,11 @@ class CustomDialog(QDialog, DatabaseManager):
         password = self.passwordEntry.text()
         if len(password) == 8:
             try:
-                self.database.connect_add_user_db()
+                self.database.connect_to_database()
+                self.database.connect_add_user_db(password)
                 recordroot = self.database.fetch_admin_data()
-                self.database.connect_login_user_db()
+                self.database.connect_login_user_db(password)
                 recorduser = self.database.fetch_user_data()
-                self.close_connections()
 
                 if len(recordroot) == 1 and self.isForLogin == False:
                     self.showButtons()
@@ -338,7 +338,7 @@ class CustomDialog(QDialog, DatabaseManager):
 
     def addLogo(self):
         self.taiLogo = QLabel()
-        self.taiLogo.setPixmap(QtGui.QPixmap("C:\\Users\\stand-alone1\\Desktop\\ats_new\\images\\tai-logo.png"))
+        self.taiLogo.setPixmap(QtGui.QPixmap("/home/tai-orin/Desktop/ats_new2/images/tai-logo.png"))
         #self.taiLogo.setGeometry(QtCore.QRect(0, 0, 20, 20))
         self.taiLogo.setScaledContents(True)
         self.taiLogo.setMaximumSize(160,84)
@@ -354,38 +354,38 @@ class CustomDialog(QDialog, DatabaseManager):
 
     def setButtons(self):
         self.loginButton = QPushButton(self) # type: ignore
-        self.loginButton.setIcon(QIcon("images/login-icon.png"))
+        self.loginButton.setIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/login-icon.png"))
         self.loginButton.setIconSize(self.buttonSize)
         self.loginButton.setStyleSheet("background-color: rgba(0, 153, 255, 30);border-width: 3px;border-color: #33cc33; border-radius: 25px")
         self.loginButton.hide()
 
         self.rebootButton = QPushButton(self)
-        self.rebootButton.setIcon(QIcon("images/close-icon.png"))
+        self.rebootButton.setIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/close-icon.png"))
         self.rebootButton.setIconSize(self.buttonSize)
         self.rebootButton.setStyleSheet("background-color: rgba(0, 153, 255, 30);border-width: 3px;border-color: #33cc33; border-radius: 25px;")
         self.rebootButton.hide()
 
         self.shutDownButton = QPushButton(self)
-        self.shutDownButton.setIcon(QIcon("images/shutDown.png"))
+        self.shutDownButton.setIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/shutDown.png"))
         self.shutDownButton.setIconSize(self.buttonSize)
         self.shutDownButton.setStyleSheet("background-color: rgba(0, 153, 255, 30);border-width: 3px;border-color: #33cc33; border-radius: 25px;")
         self.shutDownButton.hide()
         
         self.userButton = QPushButton(self)
-        self.userButton.setIcon(QIcon("images/user-icon.png"))
+        self.userButton.setIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/user-icon.png"))
         self.userButton.setIconSize(self.buttonSize)
         self.userButton.setStyleSheet("background-color: rgba(0, 153, 255, 30);border-width: 3px;border-color: #33cc33; border-radius: 25px;")
         self.userButton.hide()
 
         self.databaseButton = QPushButton(self)
-        self.databaseButton.setIcon(QIcon("images/database-icon.png"))
+        self.databaseButton.setIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/database-icon.png"))
         self.databaseButton.setIconSize(self.buttonSize)
         self.databaseButton.setStyleSheet("background-color: rgba(0, 153, 255, 30);border-width: 3px;border-color: #33cc33; border-radius: 25px;")
         self.databaseButton.hide()
 
     def setStatusLabel(self):
         if (self.toolStatus == False):
-            self.statusLabel.setText("EKSİK ALET BULUNMAKTADIR. (" + str(self.missingTools) + ")" + "\n GÖRMEK İÇİN GİRİŞ YAPINIZ.")
+            self.statusLabel.setText("{} EKSİK ALET BULUNMAKTADIR. \n GÖRMEK İÇİN GİRİŞ YAPINIZ.".format(str(self.missingTools)))
             self.statusLabel.repaint()
             self.statusLabel.setStyleSheet(self.toolNotExistBackground)
         else:
@@ -404,6 +404,5 @@ if __name__ == "__main__":
     window.show()
     def cleanup():
         db_manager.close_connections()
-        print("Database connection is closed")
     app.aboutToQuit.connect(cleanup)
     sys.exit(app.exec_())

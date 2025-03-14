@@ -17,5 +17,6 @@ if __name__ == "__main__":
     window.show()
     def cleanup():
         db_manager.close_connections()
+        print("Database connection is closed.")
     app.aboutToQuit.connect(cleanup)
     sys.exit(app.exec_())
