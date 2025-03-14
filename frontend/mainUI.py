@@ -32,11 +32,10 @@ class MainThread(QThread):
 
 tool_list_path = "/home/tai-orin/Desktop/ats_new2/sources/toolList.txt"
         
-class CustomDialog(QDialog, DatabaseManager):
+class CustomDialog(QDialog):
     def __init__(self, database: DatabaseManager, parent = None):
         super(CustomDialog, self).__init__(parent)
         self.database = database
-
         self.setWindowTitle("Toolbox Login Panel")
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.toolWindow = ToolWindow()
@@ -66,7 +65,7 @@ class CustomDialog(QDialog, DatabaseManager):
         self.addLogo()
         self.shutDownButton.clicked.connect(self.shutDownSystem)
         self.userButton.clicked.connect(self.addUser)
-#        self.databaseButton.clicked.connect(self.database.dataMigrate(self))
+        self.databaseButton.clicked.connect(self.dataMigrate)
         self.loginButton.clicked.connect(self.readCardForLogin)
         self.rebootButton.clicked.connect(self.rebootSystem)
 #        self.toolWindow.disconnectSignal.connect(self.disconnectSensor)
@@ -155,24 +154,28 @@ class CustomDialog(QDialog, DatabaseManager):
         password = self.passwordEntry.text()
         if len(password) == 8:
             try:
-                self.database.connect_to_database()
-                self.database.connect_add_user_db(password)
-                recordroot = self.database.fetch_admin_data()
-                self.database.connect_login_user_db(password)
-                recorduser = self.database.fetch_user_data()
-
+                sqlConnectionAdm = sqlite3.connect('database_files/ADMIN.db')
+                cursorAdm = sqlConnectionAdm.cursor()
+                cursorAdm.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password", {"password":password.upper()})
+                recordroot = cursorAdm.fetchall()
+                sqlConnectionUsr = sqlite3.connect('database_files/LOGIN.db')
+                cursorUsr = sqlConnectionUsr.cursor()
+                cursorUsr.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password", {"password":password.upper()})
+                recorduser = cursorUsr.fetchall()
+                sqlConnectionAdm.close()
+                sqlConnectionUsr.close()
                 if len(recordroot) == 1 and self.isForLogin == False:
                     self.showButtons()
                 elif len(recorduser) == 1:
                     if self.toolWindowFlag:
-                        sqlConnection = self.database.conn2
+                        sqlConnection = sqlite3.connect('database_files/LOGIN.db')
                         cursor = sqlConnection.cursor()
                     elif self.userWindowFlag:
-                        sqlConnection = self.database.conn1
+                        sqlConnection = sqlite3.connect('database_files/ADMIN.db')
                         cursor = sqlConnection.cursor()
                     else:
-                        print("HATA!!! db bağlantısı için gerekli ayarlamalar(flagler) eksik yapılmış.")
-                    cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM login_data WHERE PASSWORD =:password", {"password":password.upper()})
+                        print("HATA!!! Database bağlantısı için gerekli ayarlamalar(flagler) eksik yapılmış.")
+                    cursor.execute("SELECT USERNAME, LASTNAME, DEPARTMENT, PASSWORD FROM LOGIN WHERE PASSWORD =:password", {"password":password.upper()})
                     record = cursor.fetchall()
                     sqlConnection.close()
                     if len(record) == 0:
@@ -200,29 +203,28 @@ class CustomDialog(QDialog, DatabaseManager):
                         
                     else:
                         print("Hata: Veri tabanında duplike kayıt bulunmakta!!!")
-                elif(len(self.database.login_recordroot) == 0 and len(self.database.add_user_recordroot) == 0):
+                elif(len(recorduser) == 0 and len(recordroot) == 0):
                     print("HATA!!! Veri Tabanında böyle bir kullanıcı bulunamadı...")
                     self.statusLabel.setText("KULLANICI BULUNAMADI.\nLÜTFEN TEKRAR OKUTUNUZ")
                     self.statusLabel.repaint()
-
             except sqlite3.Error as err:
                 print("Veri tabanı bağlantısı hatası:", err)
-
+                sqlConnection.close()
             finally:
                 self.passwordEntry.clear()
 
-        def openToolWindow(self):
-            photo.mainThreadFunction()
-            photo.terminate = False
-            self.workerThread = MainThread()
-            self.workerThread.start()
+    def openToolWindow(self):
+        photo.mainThreadFunction()
+        photo.terminate = False
+        self.workerThread = MainThread()
+        self.workerThread.start()
 
-            self.toolWindow.show()
-            time.sleep(2)
-            photo.sensor.setToolboxOn()
-            self.toolWindow.passwordEntry.show()
-            self.toolWindow.passwordEntry.setFocus(True)
-            self.toolWindow.autoCloseTimer.start()
+        self.toolWindow.show()
+        time.sleep(2)
+        photo.sensor.setToolboxOn()
+        self.toolWindow.passwordEntry.show()
+        self.toolWindow.passwordEntry.setFocus(True)
+        self.toolWindow.autoCloseTimer.start()
 
     """
         def debugCam(self):
@@ -262,11 +264,12 @@ class CustomDialog(QDialog, DatabaseManager):
             self.setLastStatus()
             self.setStatusLabel()
     """
+    
     def dataMigrate(self):
         """Helps transfer data from SQLite to PostgreSQL."""
-        self.database.insertSQLiteToPostgre(completeFlagParam = self.completeFlag)
+        self.database.insertSQLiteToPostgre(self.completeFlag)
         if self.completeFlag:
-            self.database.clearLocalDB(completeFlagParam= self.completeFlag)
+            self.database.clearLocalDB(self.completeFlag)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
             msg.setText("Veri tabanı aktarımı tamamlandı.")
@@ -404,5 +407,6 @@ if __name__ == "__main__":
     window.show()
     def cleanup():
         db_manager.close_connections()
+        print("Database connection is closed.")
     app.aboutToQuit.connect(cleanup)
     sys.exit(app.exec_())

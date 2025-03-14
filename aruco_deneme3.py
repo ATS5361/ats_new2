@@ -81,7 +81,7 @@ class ArUcoTesting(QWidget):
         super().__init__()
         self.setWindowTitle("ArUco Testing")
         self.setGeometry(100, 100, 1000, 500)
-        self.setWindowIcon(QIcon("images/tai-logo-color.png"))
+        self.setWindowIcon(QIcon("/home/tai-orin/Desktop/ats_new2/images/tai-logo-color.png"))
         self.initUI()
 
         self.timer = QTimer()

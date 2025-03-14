@@ -1,6 +1,7 @@
 # PyQt Libs
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, pyqtSignal
+import cv2
 
 # built-in libs
 import multiprocessing
@@ -106,13 +107,17 @@ class TakePhoto(QObject):
 		self.prev_frame_time = 0
 		self.new_frame_time = 0
 
-	def endless_loop(self): # ArUco Reading instead of sensor bytes reading
+	def endless_loop(self): # ArUco Reading instead of sensor bytes reading 
 		try:
-			self.sensor.readBytes()  # VL53 mesafe sensörü dependency
-			self.drawerChanged = self.sensor.isDrawerChanged()
-			self.drawerOpened = self.sensor.isDrawerOpened()
-			# if self.drawerOpened != self.lastDrawerStatus:
-			# 	self.counter_cekmece4 += 1
+			self.timer = QTimer()
+			self.timer.timeout.connect(self.reset_active_drawer)
+			self.timer.start(1000)  # Her saniyede bir kontrol et
+
+			# ArUco tanımları
+			self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_100)
+			self.parameters = aruco.DetectorParameters_create()
+
+
 			self.lastDrawerStatus = self.drawerOpened
 			currentDistance = self.sensor.getFilteredDistance()
 			self.sensor.distance = currentDistance
@@ -128,7 +133,7 @@ class TakePhoto(QObject):
 					self.openedDrawerList.append(self.drawerNum)
 					self.openedDrawersTrigger.emit(self.openedDrawerList)
 
-				# print(str(self.drawerNum))
+				print(str(self.drawerNum))
 
 				if self.drawerNum == 1:
 					self.map1, self.map2, self.map1_0014, self.map2_0014 = setCameraParameter()
@@ -319,7 +324,8 @@ class TakePhoto(QObject):
 					self.sensor.incomingData = 0
 					self.closed_flag = 0
 		except Exception as e:
-			print("Patladık: ", e)
+			print("Aruco'da patladık: ", e)
+
 	def endlessLoop(self):
 	#time.sleep(0.0001)
 		try:

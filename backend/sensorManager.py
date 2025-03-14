@@ -2,7 +2,7 @@ import serial
 import time
 
 class VL53:
-    _instance = None  # Singleton yapısı için: tek örneği saklayacak değişken
+    _instance = None
 
     def __init__(self):
         self.baudrate = 115200      #default baudrate
@@ -95,7 +95,7 @@ class VL53:
                         if(ord(sync2) == self.SYNC2):          
                             self.getDistances()        
                             self.updateValues()     
-                            self.ser.flush() 
+                            self.ser.flush()
 
     def getDistances(self):
         self.drawerNum = ord(self.readOneByte()) 
